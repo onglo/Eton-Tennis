@@ -1,0 +1,6 @@
+framework module Pods_Eton_Tennis {
+  umbrella header "Pods-Eton Tennis-umbrella.h"
+
+  export *
+  module * { export * }
+}
