@@ -81,7 +81,6 @@ class addNewMatchViewController: UIViewController {
         // init first game
         let gameScore = ["0-0"]
 
-            
         // generate match code
         tempCode = randomString(length: 5)
         
@@ -91,6 +90,41 @@ class addNewMatchViewController: UIViewController {
         
         // attempt to write info
         dbRef.child("matches").child(tempCode).setValue(gameInfo.toAnyObject())
+        
+        // create a new crypt reference
+        let crypt = Encryption()
+        
+        // get player A reference that is encrypted
+        var playerARefrence = playerANameInput.text!.lowercased()
+        playerARefrence = crypt.encryptString(stringToEncrypt: playerARefrence)
+        
+        // check if player A is already in our database
+        dbRef.child("players").child(playerARefrence).observeSingleEvent(of: .value) { (snapshot) in
+
+                // check if player is not registered
+                if (snapshot.exists() == false) {
+                    
+                    // add them to our database
+                    self.dbRef.child("players").child(playerARefrence).setValue(["games": 0, "name": playerARefrence])
+                    
+                }
+        }
+        
+        // get player b refernce that is encrypted
+        var playerBReference = playerBNameInput.text!.lowercased()
+        playerBReference = crypt.encryptString(stringToEncrypt: playerBReference)
+        
+        // check if player b is already in our database
+        dbRef.child("players").child(playerBReference).observeSingleEvent(of: .value) { (snapshot) in
+            
+            // check if player is not registered
+            if (snapshot.exists() == false) {
+                
+                // add them to our database
+                self.dbRef.child("players").child(playerBReference).setValue(["games": 0, "name": playerBReference])
+                
+            }
+        }
         
         // segue to game created
         self.performSegue(withIdentifier: "matchConfirmation", sender: nil)

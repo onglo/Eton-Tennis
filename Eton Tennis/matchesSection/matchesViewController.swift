@@ -31,7 +31,7 @@ class matchesViewController: UIViewController, UITableViewDelegate, UITableViewD
     var tableData = [game]()
     
     // init data var
-    var data = "loading"
+    var data:stateType = .loading
     
     // init segue data
     var segueData = Array<Any>()
@@ -39,14 +39,29 @@ class matchesViewController: UIViewController, UITableViewDelegate, UITableViewD
     // init currentMatchCode
     var currentMatchCode = "deafult"
     
+    // data type format to keep track of which state we are in
+    enum stateType {
+        case deafult, loading, nogames
+    }
+        
     func numberOfSections(in tableView: UITableView) -> Int {
         
-        if (data == "loading" || data == "No games to show") {
+//        if (data == "loading" || data == "No games to show") {
+//            return 1
+//        }
+//        else {
+//            return tableData.count
+//        }
+        
+        switch data {
+        case .deafult:
+            return tableData.count
+        case .loading:
+            return 1
+        case .nogames:
             return 1
         }
-        else {
-            return tableData.count
-        }
+        
     }
     
     // set height of section
@@ -71,13 +86,23 @@ class matchesViewController: UIViewController, UITableViewDelegate, UITableViewD
         var matchesCell:matchTableViewCell!
         
         // check if loading or no data
-        if (data == "loading" || data == "No games to show") {
+        if (data == .loading || data == .nogames) {
             
             // get cell from board
             noDataCell = tableView.dequeueReusableCell(withIdentifier: "emptyTable") as! noDataTableViewCell
             
             // change text of label
-            noDataCell.infoTextLabel.text = data.capitalized
+            //noDataCell.infoTextLabel.text = data.capitalized
+            
+            // check what we need the label to display
+            if data == .loading {
+                // change text of label
+                noDataCell.infoTextLabel.text = "Loading..."
+            }
+            else {
+                // change text to no games to show
+                noDataCell.infoTextLabel.text = "No games to show"
+            }
             
             return noDataCell
         
@@ -226,11 +251,11 @@ class matchesViewController: UIViewController, UITableViewDelegate, UITableViewD
             if snapshot.hasChildren() {
         
                 // set data attr and reload
-                self.data = "games"
+                self.data = .deafult
             }
             else {
                 // set data attr and reload
-                self.data = "No games to show"
+                self.data = .nogames
             }
             
             self.tableView.reloadData()
@@ -250,7 +275,7 @@ class matchesViewController: UIViewController, UITableViewDelegate, UITableViewD
                 self.tableView.reloadData()
             }
 
-        }
+        } 
         
         // listen for when they are deleted
         dbRef.child("matches").observe(.childRemoved) { (snapshot) in
@@ -286,7 +311,7 @@ class matchesViewController: UIViewController, UITableViewDelegate, UITableViewD
     func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
 
         // check if there are matches
-        if data == "games" {
+        if data == .deafult {
             
             let deleteAction = UITableViewRowAction(style: UITableViewRowActionStyle.destructive, title: "Delete", handler: { (action, cellPath) in
                 
@@ -310,7 +335,7 @@ class matchesViewController: UIViewController, UITableViewDelegate, UITableViewD
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         // check if there are matches and this isn't a placeholder
-        if data == "games" {
+        if data == .deafult {
             
             // get cell we want
             let tappedCell = tableView.cellForRow(at: indexPath) as! matchTableViewCell
