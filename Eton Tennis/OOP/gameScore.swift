@@ -19,7 +19,7 @@ class GameScore: Player {
         
         // get snapshot value as dict
         let snapshotValue = snapshot.value as! [String: AnyObject]
-        
+                
         // same game score
         numberOfGames = snapshotValue["games"] as! Int;
     }

@@ -17,7 +17,7 @@ class statsTableViewController: UITableViewController {
     var dbRef:DatabaseReference!
     
     // large data array
-    var DataArray:[GameScore]!
+    var DataArray:[GameScore] = []
     
     // connect table view
 
@@ -33,23 +33,71 @@ class statsTableViewController: UITableViewController {
         // single listener for value of stats
         dbRef.child("players").observe(.childAdded) { (snapshot) in
             
-            // append data value to data array
-            self.DataArray.append(GameScore(snapshot: snapshot))
+            // parse data
+            let parsedData = (GameScore(snapshot: snapshot))
             
+            // set number of games
+            parsedData.setNumberOfGames(snapshot: snapshot)
+            
+            // append it to the array
+            self.DataArray.append(parsedData)
+        
         }
         
         // check for match changes
-        dbRef.child("matches").observe(.value) { (snapshot) in
+        dbRef.child("players").observe(.value) { (snapshot) in
             
-            if snapshot.hasChildren() {
+            // create an array that will store the values
+            var numberValues:[Int] = []
+            
+            // go thru each data entry and get the person's score
+            for entry in self.DataArray {
                 
+                // append score value
+                numberValues.append(entry.numberOfGames)
                 
             }
-            else {
+            
+            // sort the number values
+            let sortedValues = QuickSort(sort: numberValues)
+            
+            // init sorted game data
+            var sortedGameData:[GameScore] = []
+            
+            //loop thru each player and find the sorted version
+            for playerNumberOfGames in sortedValues.arrayToSort {
+                
+                var index = 0
+                
+                // find the data entry we want
+                for entry in self.DataArray {
+                    
+                    // check if this person has the right game score
+                    if entry.numberOfGames == playerNumberOfGames {
+                        
+                        // add it to the sorted game data
+                        sortedGameData.append(entry)
+                        
+                        // remove it from gameData Array
+                        self.DataArray.remove(at: index)
+                    }
+                    else {
+                        
+                        // else move onto the next index
+                        index += 1
+                    }
+                }
                 
             }
             
-            print(self.DataArray)
+            self.DataArray = sortedGameData
+            
+            // tell the computer there is data
+            self.dataState = "data"
+        
+            // reload table data
+            self.tableView.reloadData()
+            
         }
         
 
@@ -79,6 +127,10 @@ class statsTableViewController: UITableViewController {
             numberOfSections = 1
             
         }
+        else {
+            // return number of values in the data array
+            numberOfSections = self.DataArray.count
+        }
         
         return numberOfSections;
     }
@@ -100,6 +152,22 @@ class statsTableViewController: UITableViewController {
             matchesCell.mainTextLabel.text = "Loading..."
             
             return matchesCell
+        }
+        else {
+            
+            // get player number of games and player name
+            let numberOfGames = self.DataArray[indexPath.section].numberOfGames
+            let name = self.DataArray[indexPath.section].playerName
+            
+            // decrypt name
+            let decryptedName = Encryption().decryptString(stringToDecrypt: name)
+            
+            // format label that will show the player name and game score
+            let label = decryptedName + " - " + String(numberOfGames)
+            
+            // set label to this
+            matchesCell.mainTextLabel.text = label
+
         }
         
         return matchesCell
